@@ -1,0 +1,31 @@
+# Public HTTPS entry point for MinIO artifact downloads.
+# Caddy auto-obtains and renews a Let's Encrypt certificate for the domain below.
+# It proxies to the MinIO S3 API over the internal docker network (minio:9000),
+# so port 9000 never needs to be exposed to the outside world.
+#
+# Security model: buckets are private; objects are only retrievable with a valid
+# presigned SigV4 URL (bound to https://aicoursebuilder1337test1.work). Knowing the
+# URL == the capability to download that one object until it expires. No IP rules.
+
+aicoursebuilder1337test1.work {
+	# Single-use short delivery links: GET /d/<session_id> -> the delivery service
+	# (delivery.py), which verifies payment + single-use/TTL and 302-redirects to a
+	# fresh presigned MinIO URL. It runs on the VPS in the hab_delivery container on
+	# this same docker network. Everything else hits MinIO.
+	handle /d/* {
+		reverse_proxy delivery:8000
+	}
+
+	# Everything else -> MinIO. The SigV4 signature is computed by api.py over
+	# Host=aicoursebuilder1337test1.work, and Caddy preserves the Host header by
+	# default, so the signature matches on MinIO's side.
+	handle {
+		reverse_proxy minio:9000
+	}
+
+	# Optional: basic rate limiting / logging can be added here later.
+	log {
+		output stdout
+		format console
+	}
+}

@@ -1,0 +1,11 @@
+{
+  "_comment": "IMMUTABLE Definition of Done for hab_${TWEETID} s${SPRINT}. The architect MAY add checks before the sprint starts; once the inner loop begins it is frozen. Each check is graded by 03_auto_research/dod_eval.py.",
+  "tweet_id": "${TWEETID}",
+  "sprint": ${SPRINT},
+  "checks": [
+    {"id": "has_readme",   "kind": "file_exists", "path": "README.md", "weight": 1},
+    {"id": "has_backend",  "kind": "file_exists", "path": "backend/main.py", "weight": 1},
+    {"id": "deps_declared","kind": "file_exists", "path": "backend/requirements.txt", "weight": 1},
+    {"id": "app_imports",  "kind": "cmd", "run": "python -c \"import ast,sys; ast.parse(open('backend/main.py').read())\"", "expect_code": 0, "weight": 1}
+  ]
+}

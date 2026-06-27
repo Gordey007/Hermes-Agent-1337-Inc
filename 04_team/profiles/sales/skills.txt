@@ -1,0 +1,16 @@
+# Skills for the sales profile
+# own (skills/sales/):
+sl-build-offer
+sl-send-x
+sl-stripe-invoice
+sl-dialog
+sl-analyze-reply
+sl-deliver
+# shared (skills/_shared/):
+sqlite-leads
+minio-artifacts
+kanban-read
+naming
+# interaction (skills/_interaction/):
+handoff
+escalate

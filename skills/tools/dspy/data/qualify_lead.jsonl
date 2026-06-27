@@ -1,0 +1,5 @@
+{"inputs": {"tweet_text": "I will happily pay someone to build a tiny tool that turns my CSV into a shareable chart link"}, "label": {"is_relevant": true, "intent": "willing_to_pay", "reason": "explicit willingness to pay for a small buildable tool"}}
+{"inputs": {"tweet_text": "looking for a simple Notion-to-Markdown exporter, anyone know a tool?"}, "label": {"is_relevant": true, "intent": "looking_for_tool", "reason": "clear small-tool need that could convert to a sale"}}
+{"inputs": {"tweet_text": "We're hiring a senior backend engineer, full-time, relocation to Berlin"}, "label": {"is_relevant": false, "intent": "hiring", "reason": "full-time hire, not a buildable one-off product"}}
+{"inputs": {"tweet_text": "gm everyone, what a beautiful day to touch grass ☀️"}, "label": {"is_relevant": false, "intent": "none", "reason": "no product need, no buyer intent"}}
+{"inputs": {"tweet_text": "ugh the weather app lied to me again, so done with all of them"}, "label": {"is_relevant": false, "intent": "none", "reason": "a rant, not a payable request"}}

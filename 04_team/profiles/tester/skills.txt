@@ -1,0 +1,16 @@
+# Skills for the tester profile
+# own (skills/tester/):
+ts-read-dod
+ts-author-unit-tests
+ts-run-tests
+ts-run-dod
+ts-test-report
+ts-handoff-evaluator
+# shared (skills/_shared/):
+kanban-read
+kanban-write
+naming
+docker-sandbox
+# interaction (skills/_interaction/):
+handoff
+escalate

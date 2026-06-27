@@ -1,0 +1,18 @@
+# Skills for the architect profile
+# own (skills/architect/):
+ar-read-research
+ar-system-design
+ar-data-model
+ar-api-contract
+ar-component-spec
+ar-author-dod
+ar-request-research
+ar-handoff-developer
+# shared (skills/_shared/):
+kanban-read
+kanban-write
+naming
+# interaction (skills/_interaction/):
+request-reply
+handoff
+escalate

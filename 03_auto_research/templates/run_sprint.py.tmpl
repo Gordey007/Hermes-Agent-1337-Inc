@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+"""GENERATED sprint program for hab_${TWEETID} / sprint ${SPRINT}.
+
+Do not edit by hand — regenerate with:
+    uv run 03_auto_research/scaffold.py --tweet ${TWEETID} --sprint ${SPRINT} ...
+
+This is the per-sprint iteration harness. It binds the immutable engine
+(03_auto_research/outer_loop.py + inner_loop.py + dod_eval.py) to THIS sprint's paths and
+DoD, then runs the outer loop (≤${MAX_OUTER}) over components, each with an inner loop
+(≤${MAX_INNER}). The two callbacks below — planner and agent_step — are the seams where the
+Hermes profile team does the actual thinking; here they are dispatched as kanban tasks via the
+built-in kanban-orchestrator skill so every step is visible on the board.
+"""
+from __future__ import annotations
+
+import subprocess
+import sys
+from pathlib import Path
+
+# the engine lives in 03_auto_research/
+ENGINE = Path("${ENGINE_DIR}")
+sys.path.insert(0, str(ENGINE))
+
+from outer_loop import run_outer  # noqa: E402
+
+TWEET_ID = "${TWEETID}"
+SPRINT = ${SPRINT}
+SPRINT_DIR = "${SPRINT_DIR}"
+DOD_PATH = "${DOD_PATH}"
+DOCKER_PROJECT = "${DOCKER_PROJECT}"
+
+# Phases drive the planner: each becomes a component build dispatched to a profile.
+PHASES = [
+    ("backend", "developer"),
+    ("frontend", "developer"),
+]
+
+
+def _dispatch(title: str, assignee: str, body: str) -> None:
+    """Create a kanban task for a profile (kanban-orchestrator). Best-effort: if the CLI is
+    absent (local dry-run) we just print the intended dispatch."""
+    cmd = ["hermes", "kanban", "create", "--assignee", assignee, "--title", title]
+    try:
+        subprocess.run(cmd + [body], check=False)
+    except FileNotFoundError:
+        print(f"[dispatch:{assignee}] {title} :: {body[:80]}")
+
+
+def planner(sprint_dir: str, last_score: float, feedback: str, done: list) -> dict:
+    """Pick the next component, or stop when all phases are built."""
+    for component, _ in PHASES:
+        if component not in done:
+            return {"action": "build", "component": component,
+                    "dod": DOD_PATH, "sprint_dod": DOD_PATH,
+                    "note": f"build {component} (last score {last_score})"}
+    return {"action": "stop"}
+
+
+def agent_step(product_dir: str, component: str, feedback: str) -> str:
+    """One edit on `component`. Delegates to the developer profile via kanban; the engine
+    then runs the immutable DoD and keeps/rolls back the result."""
+    assignee = dict(PHASES).get(component, "developer")
+    _dispatch(
+        title=f"hab-{TWEET_ID[-7:]}-s{SPRINT}-{component}",
+        assignee=assignee,
+        body=(f"Work the '{component}' component under {product_dir} to satisfy {DOD_PATH}. "
+              f"Stack: {DOCKER_PROJECT}. Previous DoD feedback: {feedback or 'none'}."),
+    )
+    return f"dispatched {component} to {assignee}"
+
+
+if __name__ == "__main__":
+    result = run_outer(SPRINT_DIR, planner, agent_step,
+                       docker_project=DOCKER_PROJECT, max_outer=${MAX_OUTER})
+    print(result)
+    sys.exit(0 if result.get("done") else 1)

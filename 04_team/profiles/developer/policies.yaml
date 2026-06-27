@@ -1,0 +1,17 @@
+# OpenShell policies for developer
+network:
+  allow:
+    - localhost                  # kanban + the running stack services
+    - pypi.org                   # installing dependencies while building images
+    - files.pythonhosted.org
+    - registry.npmjs.org         # npm install for Next.js
+  deny:
+    - "*"
+filesystem:
+  allow_write:
+    - /sandbox/work              # only product/ inside the sprint
+    - /sandbox/kanban
+shell:
+  allow:
+    - docker                     # up/down of the sprint stack
+    - python

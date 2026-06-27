@@ -1,0 +1,13 @@
+# OpenShell policies for architect
+network:
+  allow:
+    - localhost                  # kanban
+  deny:
+    - "*"                        # design happens offline; the researcher fetches references
+filesystem:
+  allow_write:
+    - /sandbox/work              # only design/ inside the sprint
+    - /sandbox/kanban
+shell:
+  allow:
+    - python

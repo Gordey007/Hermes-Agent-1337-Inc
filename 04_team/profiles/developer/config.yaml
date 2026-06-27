@@ -1,0 +1,17 @@
+# Hermes config — developer (L2, spawns role-based sub-agents)
+# hermes profile create developer --clone
+
+delegation:
+  orchestrator_enabled: true     # spawns role-* sub-agents per component
+  max_spawn_depth: 2
+  max_concurrent_children: 3
+
+toolsets:
+  - shell
+  - python
+  - docker
+  - sqlite
+
+limits:
+  dev_architect: 5
+  inner_loop: 10

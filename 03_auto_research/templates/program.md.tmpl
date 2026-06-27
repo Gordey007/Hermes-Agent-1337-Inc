@@ -1,0 +1,35 @@
+# Program — hab_${TWEETID} / sprint ${SPRINT}
+
+> The plain-English **program file** of Karpathy's three-file contract.
+> Authored by the architect (with the evaluator), never touched by the developer.
+> The developer edits only `product/`; this file and `dod.json` stay frozen.
+
+## Three-file contract (what each side may touch)
+
+| File | Role | Who edits |
+|---|---|---|
+| `dod.json` + `03_auto_research/dod_eval.py` | the immutable judge (Karpathy `prepare.py`) | nobody — frozen |
+| `product/` | the agent-modifiable implementation (Karpathy `train.py`) | developer |
+| `program.md` (this file) | the human/architect direction (Karpathy `program.md`) | architect |
+
+## Source lead
+${DIRECTION}
+
+## What "done" means
+The product in `product/` passes every check in `dod.json` (score = 1.0),
+runs in the isolated stack `${DOCKER_PROJECT}`, and leaves a buyer-ready artifact.
+
+## The loop (do not deviate)
+1. Read this program. Modify ONLY `product/`. Never edit `dod.json` or `dod_eval.py`.
+2. Run the immutable DoD. The metric is the DoD score [0..1].
+3. **Keep if better, roll back if worse** — the engine snapshots `product/` before each
+   step (the equivalent of `git commit` on improvement, `git reset` on regression).
+4. The developer has up to ${MAX_INNER} attempts on a component (the inner loop).
+   **If it does not reach 1.0 — keep the best partial result and start over from the
+   global/outer loop** (≤ ${MAX_OUTER}). Do not throw the partial away.
+5. NEVER STOP until the whole-product DoD reaches 1.0 or the outer limit is hit.
+
+## Pipeline
+researcher → architect → developer → tester → evaluator, coordinated by
+orchestrator_sprint. The architect refines this direction into `design/` specs;
+the developer realizes them in `product/`. The evaluator owns the final verdict.

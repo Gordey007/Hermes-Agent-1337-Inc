@@ -1,0 +1,12 @@
+# Hermes config — architect (L2 leaf)
+# hermes profile create architect --clone
+
+delegation:
+  orchestrator_enabled: false
+
+toolsets:
+  - python
+  - sqlite       # kanban counters
+
+limits:
+  architect_researcher: 5

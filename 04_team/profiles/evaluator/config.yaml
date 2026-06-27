@@ -1,0 +1,14 @@
+# Hermes config — evaluator (L2, the assessor)
+# hermes profile create evaluator --clone
+
+delegation:
+  orchestrator_enabled: false    # doesn't spawn executors, but surveys via collect-picture
+
+toolsets:
+  - shell        # docker down -v during cleanup
+  - python       # dod_eval / dspy_eval
+  - docker
+  - sqlite
+
+limits:
+  outer_loop: 10

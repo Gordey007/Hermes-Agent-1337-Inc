@@ -1,0 +1,119 @@
+# Hermes Accelerated Business Infrastructure.
+# Starts MinIO (artifact and report storage) and an isolated network for sprint sandboxes.
+#   docker compose -f infra/docker-compose.yml up -d
+# The hermes-artifacts and hermes-reports buckets are created by the minio-init service at startup.
+name: hab_infra
+
+services:
+  minio:
+    image: minio/minio:latest
+    container_name: hab_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      # S3 API: NOT exposed publicly. Only on localhost (for the Caddy reverse proxy)
+      # and on the 172.18.0.1 bridge (for OpenShell sandbox uploads).
+      # Buyers reach MinIO only through Caddy over HTTPS (see the caddy service below).
+      - "127.0.0.1:9000:9000"
+      - "172.18.0.1:9000:9000"
+      # Web console — only locally on the VPS, not exposed to the sandboxboxes.
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - hab_infra_net
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # HTTPS reverse proxy in front of MinIO. Auto-obtains a Let's Encrypt cert for
+  # ${CDN_DOMAIN}. This is the ONLY public entry point to artifact storage; the
+  # presigned SigV4 URLs are bound to https://${CDN_DOMAIN}. Port 9000 stays private.
+  caddy:
+    image: caddy:latest
+    container_name: hab_caddy
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      CDN_DOMAIN: ${CDN_DOMAIN:-aicoursebuilder1337test1.work}
+    ports:
+      - "80:80"     # needed for the ACME HTTP-01 challenge / redirect to HTTPS
+      - "443:443"
+    volumes:
+      # Mount the directory, NOT the single Caddyfile. A single-file bind mount
+      # pins the file's inode at container-create time; editors (nano/vim/VSCode)
+      # save by replacing the inode, so host edits never reach the container until
+      # it is recreated. Mounting the dir tracks the directory inode and picks up
+      # edits immediately (Caddy still reads /etc/caddy/Caddyfile). Extra files in
+      # this dir (docker-compose.yml) are ignored by Caddy.
+      - ./:/etc/caddy/:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - hab_infra_net
+    restart: unless-stopped
+
+  # Public single-use delivery service (serves GET /d/<session_id>). Lives on the VPS
+  # next to MinIO because the sales api.py is locked inside the OpenShell sandbox and
+  # cannot be reached from outside. Caddy routes /d/* here. No public port: only Caddy
+  # talks to it over the internal network.
+  delivery:
+    image: python:3.12-slim
+    container_name: hab_delivery
+    command: sh -c "pip install --quiet --no-cache-dir flask stripe boto3 && python /app/delivery.py"
+    working_dir: /app
+    environment:
+      STRIPE_API_KEY_TEST: ${STRIPE_API_KEY_TEST:?set STRIPE_API_KEY_TEST in infra/.env}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      S3_PUBLIC_ENDPOINT: https://${CDN_DOMAIN:-aicoursebuilder1337test1.work}
+      PRESIGN_TTL_MINUTES: "3"
+    volumes:
+      - ./delivery.py:/app/delivery.py:ro
+    networks:
+      - hab_infra_net
+    restart: unless-stopped
+
+  # Initial bucket initialization.
+  minio-init:
+    image: minio/mc:latest
+    container_name: hab_minio_init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
+      mc mb -p local/hermes-artifacts;
+      mc mb -p local/hermes-reports;
+      mc anonymous set none local/hermes-artifacts;
+      mc anonymous set none local/hermes-reports;
+      echo 'buckets ready';
+      "
+    networks:
+      - hab_infra_net
+
+networks:
+  # Shared infrastructure network. Sprint sandboxes are launched in their own
+  # projects (`docker compose -p hab_<tweetid>_s<sprint>`) with separate networks—
+  # they are isolated and have no public ports facing the outside.
+  hab_infra_net:
+    name: hab_infra_net
+    driver: bridge
+
+volumes:
+  minio_data:
+    name: hab_minio_data
+  caddy_data:
+    name: hab_caddy_data
+  caddy_config:
+    name: hab_caddy_config

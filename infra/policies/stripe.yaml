@@ -1,0 +1,49 @@
+preset:
+  name: stripe
+  description: Stripe REST API + Stripe CLI (checkout sessions, webhooks via `stripe listen`)
+
+network_policies:
+  stripe:
+    name: stripe
+    endpoints:
+      - host: 172.18.0.1
+        port: 8000
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow: { method: GET,  path: "/**" }
+          - allow: { method: POST, path: "/**" }
+      # --- Stripe REST API: creating Checkout Sessions, payment links, retrieve, etc. ---
+      - host: api.stripe.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+          - allow: { method: DELETE, path: "/**" }
+          - allow: { method: HEAD, path: "/**" }
+
+      # --- `stripe listen` opens a WebSocket session to receive webhook events.
+      #     The CONNECT tunnel goes to api.stripe.com; *.stripe.com in case the
+      #     websocket_url comes back on a different subdomain (files.stripe.com, etc.) ---
+      - host: "*.stripe.com"
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+          - allow: { method: HEAD, path: "/**" }
+
+    binaries:
+      # the Stripe CLI itself (installed at ~/node_modules/.bin/stripe -> @stripe/cli)
+      - { path: "**/stripe" }
+      # curl for direct calls to api.stripe.com
+      - { path: "**/curl" }
+      # python (boto3 / requests), if you call Stripe from a script
+      - { path: /usr/bin/python3.13 }
+      - { path: /usr/bin/python3 }
+      - { path: /usr/bin/python }
+      - { path: "**/python3*" }
+      - { path: "**/python*" }

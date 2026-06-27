@@ -1,0 +1,15 @@
+# OpenShell policies for evaluator
+network:
+  allow:
+    - localhost                       # kanban + MinIO (hermes-reports)
+    - integrate.api.nvidia.com        # DSPy reflection LM (the DoD metric)
+  deny:
+    - "*"
+filesystem:
+  allow_write:
+    - /sandbox/work                   # reports/ + cleanup of working directories
+    - /sandbox/kanban
+shell:
+  allow:
+    - docker                          # down -v during cleanup
+    - python

@@ -1,0 +1,20 @@
+# Hermes config — orchestrator_sprint (L2)
+# hermes profile create orchestrator_sprint --clone
+
+delegation:
+  orchestrator_enabled: true     # delegates to researcher/architect/developer/tester/evaluator
+  max_spawn_depth: 2
+  max_concurrent_children: 3     # up to 3 developer sub-agents per component
+
+toolsets:
+  - sqlite
+  - shell
+  - python
+  - docker
+
+limits:
+  dev_architect: 5
+  architect_researcher: 5
+  github_search: 10
+  inner_loop: 10
+  outer_loop: 10

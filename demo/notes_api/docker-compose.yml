@@ -1,0 +1,32 @@
+# Demo sandbox for a Hermes "sprint": the notes_api component + an immutable DoD evaluator.
+# Mimics hab_<tweetid>_s<sprint>: no public ports, everything on an internal network.
+#
+#   docker compose -p hab_demo_s1 up --build --abort-on-container-exit --exit-code-from eval
+#   docker compose -p hab_demo_s1 down -v
+#
+# The whole compose exit code == the eval exit code (0 = keep, 1 = rollback, 2 = service didn't come up).
+name: hab_demo
+
+services:
+  app:
+    build: ./app
+    container_name: hab_demo_app
+    networks:
+      - hab_demo_net
+    # No exposed ports — the evaluator reaches app:8000 over the internal network.
+
+  eval:
+    build: ./eval
+    container_name: hab_demo_eval
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      TARGET_URL: http://app:8000
+    networks:
+      - hab_demo_net
+
+networks:
+  hab_demo_net:
+    name: hab_demo_net
+    driver: bridge

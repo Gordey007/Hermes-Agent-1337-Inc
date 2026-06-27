@@ -1,0 +1,16 @@
+# Skills for the researcher profile
+# own (skills/researcher/):
+rs-plan-research
+rs-github-search
+rs-web-docs
+rs-clean-context
+rs-write-notes
+rs-decide-enough
+rs-handoff-architect
+# shared (skills/_shared/):
+kanban-read
+kanban-write
+naming
+# interaction (skills/_interaction/):
+handoff
+escalate

@@ -1,0 +1,17 @@
+# OpenShell policies — sales
+network:
+  allow:
+    - localhost                  # leads + kanban + MinIO
+    - api.stripe.com             # invoice creation (TEST)
+    - api.twitter.com            # sending the offer / DM
+    - api.x.com
+  deny:
+    - "*"
+filesystem:
+  allow_write:
+    - /sandbox/x_lead            # leads statuses
+    - /sandbox/kanban
+shell:
+  allow:
+    - python
+# Security: never log Stripe/X keys; the live key rk_live_ is forbidden from being loaded.

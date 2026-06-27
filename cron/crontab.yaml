@@ -1,0 +1,86 @@
+# Hermes cron registry — the ONLY place where the pipeline is wired together over time.
+#
+# Each entry is a real Hermes cron job: NAME + TASK (the natural-language prompt the
+# Hermes agent executes) + CRON expression (when it fires). The agent reads TASK,
+# runs the referenced scripts/skills, and (for orchestration jobs) drives the kanban
+# board through the built-in `kanban-orchestrator` skill.
+#
+# Install (one entry):
+#   hermes cron create --name X_LEAD_HUNTER --schedule "0 * * * *" --task "<task text>"
+# List / inspect:
+#   hermes cron list
+#   hermes cron show X_LEAD_HUNTER
+#
+# Apply the whole registry:
+#   uv run cron/apply.py            # creates/updates every job below
+#
+# The TASK text is intentionally imperative and self-contained: a fresh agent context
+# must be able to act on it without this repository's chat history.
+
+jobs:
+  # 1) INGEST — fill the leads table. Pure script, no orchestration.
+  - name: X_LEAD_HUNTER
+    schedule: "0 * * * *"          # hourly
+    assignee: orchestrator_global
+    task: >
+      Execute the lead hunter: `uv run /sandbox/tools/x_lead/x_lead_hunter.py`.
+      It runs the X recent-search queries from queries.yaml, filters bots, and upserts
+      new rows into the leads table (dev_status='pending', is_relevant=NULL).
+      Do not contact anyone. Just ingest. Report how many new leads were inserted.
+
+  # 2) GLOBAL LOOP — one lead per day becomes a project, then an offer.
+  - name: CREATE_PROJECT_AND_OFFER
+    schedule: "0 1 * * *"          # daily at 01:00
+    assignee: orchestrator_global
+    task: >
+      Run ONE global-cycle step. Using your og-* skills:
+      (1) og-qualify-lead: read leads WHERE is_relevant IS NULL AND dev_status='pending',
+          mark is_relevant for each.
+      (2) og-pick-task: pick the single simplest qualified lead, set dev_status='in_progress'.
+      (3) og-author-dod: derive the first DoD from the tweet text.
+      (4) og-start-sprint: scaffold the sprint program from templates —
+          `uv run /sandbox/03_auto_research/scaffold.py --tweet <tweet_id> --sprint 1
+           --direction "<tweet text>" --dod-from-tweet`, then create the root kanban task
+          via the kanban-orchestrator skill (`hermes kanban create --assignee orchestrator_sprint
+          --title "sprint <tweet_id> s1"`) and launch the sprint runner
+          `uv run <sprint_dir>/run_sprint.py`.
+      (5) On success (all DoD met): og-handoff-sales — upload artifacts to MinIO, set
+          dev_status='done', dev_artifact=<minio-key>; the SALES_FOLLOWUP job takes it from here.
+      (6) On failure: evaluator already wrote reports/ to MinIO; set dev_status='failed' and stop.
+      Touch at most ONE lead per run.
+
+  # 3) SPRINT WATCHDOG — recover stuck sprints, never start new work.
+  - name: SPRINT_WATCHDOG
+    schedule: "*/30 * * * *"       # every 30 min
+    assignee: orchestrator_sprint
+    task: >
+      Inspect kanban tasks in IN PROGRESS for longer than 2h with no progress.jsonl
+      update. For each: read reports/, decide keep/rollback/stop (os-decide-next). If a
+      sprint exceeded outer-loop limit (10), trigger ev-cleanup (drop-all-except-reports,
+      `docker compose -p hab_<tweetid>_s<sprint> down -v`) and mark the lead dev_status='failed'.
+      Do NOT start new sprints — that is CREATE_PROJECT_AND_OFFER's job.
+
+  # 4) SALES — non-disruptive outreach + delivery on payment.
+  - name: SALES_FOLLOWUP
+    schedule: "0 */6 * * *"        # every 6 hours
+    assignee: sales
+    task: >
+      Using your sl-* skills, run one sales step:
+      (1) New: for leads WHERE dev_status='done' AND offer_sent=0 — sl-build-offer +
+          sl-stripe-invoice (TEST key STRIPE_API_KEY_TEST only) + sl-send-x via
+          /sandbox/02_sales_pipeline/x_actions.py; set offer_sent=1, reply_status='no_reply'.
+      (2) Follow-up: for offer_sent=1 leads past the cooldown (updated_at), sl-dialog —
+          at most ONE soft touch per lead per day; sl-analyze-reply → reply_status/reply_summary.
+      (3) Delivery: for paid Stripe sessions, sl-deliver — issue a single-use presigned
+          MinIO link and set reply_status='done'.
+      Never exceed one outbound message per lead per day.
+
+  # 5) HEALTH — keep the autonomous OS alive.
+  - name: HEALTHCHECK
+    schedule: "*/15 * * * *"       # every 15 min
+    assignee: orchestrator_global
+    task: >
+      Run l0-healthcheck: PRAGMA table_info(leads) has tweet_id; no orphaned hab_* docker
+      containers (`docker ps -a`); MinIO buckets hermes-artifacts/hermes-reports reachable;
+      API tokens valid. On any failure, run l0-incident and stop the affected job rather
+      than letting it loop on a broken dependency.

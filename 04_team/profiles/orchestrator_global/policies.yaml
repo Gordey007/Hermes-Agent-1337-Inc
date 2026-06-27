@@ -1,0 +1,17 @@
+# OpenShell policies for orchestrator_global (nemohermes hermes policy-add)
+network:
+  allow:
+    - localhost            # MinIO, kanban, leads (local)
+  deny:
+    - "*"                  # the global orchestrator doesn't reach out externally itself
+filesystem:
+  allow_write:
+    - /sandbox/work        # sprint working directories
+    - /sandbox/kanban
+    - /sandbox/x_lead
+  deny_write:
+    - /sandbox/secrets
+shell:
+  allow:
+    - docker               # bring sprint stacks up/down (via naming)
+    - python

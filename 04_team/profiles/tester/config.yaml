@@ -1,0 +1,11 @@
+# Hermes config — tester (L2 leaf)
+# hermes profile create tester --clone
+
+delegation:
+  orchestrator_enabled: false
+
+toolsets:
+  - shell
+  - python
+  - docker       # bring up the stack for the run
+  - sqlite

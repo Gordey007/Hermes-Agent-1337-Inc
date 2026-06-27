@@ -1,0 +1,19 @@
+# Skills for the orchestrator_sprint profile
+# own (skills/orchestrator_sprint/):
+os-plan-sprint
+os-delegate-phase
+os-track-iterations
+os-collect-status
+os-decide-next
+os-teardown
+# shared (skills/_shared/):
+kanban-read
+kanban-write
+naming
+docker-sandbox
+# interaction (skills/_interaction/):
+subagent-spawn
+handoff
+request-reply
+collect-picture
+escalate

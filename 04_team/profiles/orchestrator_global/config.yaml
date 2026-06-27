@@ -1,0 +1,22 @@
+# Hermes config — orchestrator_global (L1, cron)
+# Create the profile: hermes profile create orchestrator_global --clone
+
+delegation:
+  orchestrator_enabled: true     # launches orchestrator_sprint as a sub-agent
+  max_spawn_depth: 2             # global → sprint → leaf
+  max_concurrent_children: 1     # one sprint at a time (focus/anti-ban)
+
+toolsets:
+  - sqlite
+  - shell
+  - python
+
+blueprint:
+  schedule: "*/30 * * * *"       # one pass through the funnel per run
+  prompt: |
+    Read AGENT.md. Perform ONE step of the global funnel for ONE lead:
+    qualification → pick the simplest task → start the sprint → (on done) handoff to sales →
+    record in leads. Do everything through your own og-* skills and kanban.
+
+limits:
+  outer_loop: 10

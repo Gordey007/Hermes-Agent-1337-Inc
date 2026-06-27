@@ -1,0 +1,15 @@
+# Hermes config — sales (the seller, on the global-loop side)
+# hermes profile create sales --clone
+
+delegation:
+  orchestrator_enabled: false
+
+toolsets:
+  - python       # stripe_offer.py / minio_client.py / x_actions.py
+  - sqlite       # leads
+
+# Cron touch: one step per one lead per run (anti-ban)
+metadata:
+  hermes:
+    blueprint:
+      schedule: "0 * * * *"   # hourly; the real touch is ≤1/lead/day by cooldown

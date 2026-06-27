@@ -1,0 +1,15 @@
+{
+  "component": "notes_api",
+  "version": "1.0.0",
+  "target_url_env": "TARGET_URL",
+  "metric": "pass_rate",
+  "threshold": 1.0,
+  "checks": [
+    {"id": "health", "desc": "GET /health returns status=ok"},
+    {"id": "create", "desc": "POST /notes creates a note (201) with an id"},
+    {"id": "get", "desc": "GET /notes/{id} returns the created note"},
+    {"id": "list", "desc": "GET /notes contains the created note"},
+    {"id": "delete", "desc": "DELETE /notes/{id} deletes (204), then GET gives 404"},
+    {"id": "not_found", "desc": "GET of a nonexistent note gives 404"}
+  ]
+}

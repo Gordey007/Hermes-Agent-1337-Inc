@@ -1,0 +1,4 @@
+intent_queries:
+  - intent: willing_to_pay
+    query: '"remote" developer hiring -has:links -has:media -is:retweet -is:reply'
+    rationale: A clear signal that someone is ready to pay is the hottest lead

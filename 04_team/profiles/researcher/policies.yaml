@@ -1,0 +1,20 @@
+# OpenShell policies for researcher
+network:
+  allow:
+    - localhost                  # kanban
+    - api.github.com             # gh_search REST
+    - raw.githubusercontent.com  # raw file content
+    - github.com
+    - "*.readthedocs.io"         # official documentation
+    - docs.python.org
+    - nextjs.org
+    - developer.mozilla.org
+  deny:
+    - "*"
+filesystem:
+  allow_write:
+    - /sandbox/work              # only research/ inside the sprint
+    - /sandbox/kanban
+shell:
+  allow:
+    - python                     # tools/gh_search

@@ -1,0 +1,14 @@
+# OpenShell policies for tester
+network:
+  allow:
+    - localhost                  # kanban + the running stack (http checks of the DoD)
+  deny:
+    - "*"
+filesystem:
+  allow_write:
+    - /sandbox/work              # only reports/test_*.md
+    - /sandbox/kanban
+shell:
+  allow:
+    - docker
+    - python

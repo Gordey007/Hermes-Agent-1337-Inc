@@ -1,0 +1,13 @@
+# Hermes config — researcher (L2 leaf)
+# hermes profile create researcher --clone
+
+delegation:
+  orchestrator_enabled: false    # leaf, doesn't spawn sub-agents
+
+toolsets:
+  - shell        # run tools/gh_search
+  - python
+  - sqlite       # kanban counters
+
+limits:
+  github_search: 10

@@ -1,0 +1,23 @@
+# Skills for the developer profile
+# own (skills/developer/):
+dv-read-spec
+dv-scaffold
+dv-spawn-subagent
+dv-role-ml-python
+dv-role-backend-python
+dv-role-django-python
+dv-role-frontend-nextjs
+dv-component-contract
+dv-integrate
+dv-request-architect
+dv-handoff-tester
+# shared (skills/_shared/):
+kanban-read
+kanban-write
+naming
+docker-sandbox
+# interaction (skills/_interaction/):
+subagent-spawn
+request-reply
+handoff
+escalate

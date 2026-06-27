@@ -1,0 +1,19 @@
+# Skills for the orchestrator_global profile (install into ~/.hermes/skills/)
+# own (skills/orchestrator_global/):
+og-qualify-lead
+og-pick-task
+og-author-dod
+og-refine-dod
+og-start-sprint
+og-handoff-sales
+og-close-day
+og-global-report
+# shared (skills/_shared/):
+sqlite-leads
+kanban-read
+kanban-write
+naming
+minio-artifacts
+# interaction (skills/_interaction/):
+handoff
+escalate

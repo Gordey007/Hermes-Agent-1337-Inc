@@ -1,0 +1,89 @@
+preset:
+  name: sandbox-build
+  description: Docker daemon (TCP) + registries + MinIO S3 artifacts
+
+network_policies:
+  sandbox-build:
+    name: sandbox-build
+    endpoints:
+      - host: 172.18.0.1
+        port: 9000
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: HEAD, path: "/**" }
+      # --- dockerd on the VPS bridge (docker / docker compose / docker build via shim) ---
+      - host: 172.18.0.1
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+          - allow: { method: PUT, path: "/**" }
+          - allow: { method: DELETE, path: "/**" }
+          - allow: { method: HEAD, path: "/**" }
+
+      # --- MinIO S3 API on the VPS bridge (hermes-artifacts / hermes-reports artifacts) ---
+      - host: 172.18.0.1
+        port: 9000
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+          - allow: { method: PUT, path: "/**" }
+          - allow: { method: DELETE, path: "/**" }
+          - allow: { method: HEAD, path: "/**" }
+
+      # --- Docker registries (pull base images during build) ---
+      - host: registry-1.docker.io
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+          - allow: { method: HEAD, path: "/**" }
+      - host: auth.docker.io
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+      - host: "*.docker.io"
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+          - allow: { method: HEAD, path: "/**" }
+      - host: ghcr.io
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+          - allow: { method: HEAD, path: "/**" }
+    binaries:
+      - { path: /sandbox/.brew/bin/docker }
+      - { path: /sandbox/.brew/Cellar/docker/29.6.0/bin/docker }
+      - { path: /sandbox/.docker/cli-plugins/docker-compose }
+      # python for boto3: venv symlinks point into the system, the proxy resolves /proc/pid/exe.
+      # Explicit real path + doublestar form '**/' (it crosses '/', unlike
+      # '**python', where '**' is glued to text and behaves like an ordinary '*').
+      - { path: /usr/bin/python3.13 }
+      - { path: /usr/bin/python3 }
+      - { path: /usr/bin/python }
+      - { path: "**/python3*" }
+      - { path: "**/python*" }
+      # diagnostics/upload utilities
+      - { path: "**/curl" }
+      - { path: "**/docker" }
+      - { path: "**/docker-compose" }
+      - { path: "**/mc" }
+      - { path: "**/aws" }

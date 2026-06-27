@@ -1,0 +1,41 @@
+# Template for the isolated sprint stack. Filled in via infra/naming.py.
+# Placeholders: ${TWEETID} ${SPRINT} ${WORKDIR} (=/sandbox/work/hab_<tweetid>/s<sprint>)
+# Run:       docker compose -p hab_${TWEETID}_s${SPRINT} -f <this file> up -d
+# Tear down: docker compose -p hab_${TWEETID}_s${SPRINT} down -v   (drop-all)
+#
+# The hab_net_${TWEETID}_${SPRINT} network is isolated: outbound only via an explicit OpenShell policy.
+# All services mount ${WORKDIR}/product as the product code (agent-modifiable).
+
+name: hab_${TWEETID}_s${SPRINT}
+
+networks:
+  sandbox:
+    name: hab_net_${TWEETID}_${SPRINT}
+    driver: bridge
+
+services:
+  backend:
+    container_name: hab_${TWEETID}_s${SPRINT}_backend
+    image: python:3.13-slim
+    working_dir: /app
+    volumes:
+      - ${WORKDIR}/product/backend:/app
+    command: sh -c "pip install -q -r requirements.txt 2>/dev/null; python -m uvicorn main:app --host 0.0.0.0 --port 8000 || sleep infinity"
+    networks: [sandbox]
+    expose: ["8000"]
+    restart: "no"
+
+  frontend:
+    container_name: hab_${TWEETID}_s${SPRINT}_frontend
+    image: node:20-slim
+    working_dir: /app
+    volumes:
+      - ${WORKDIR}/product/frontend:/app
+    command: sh -c "npm install --silent 2>/dev/null; npm run dev -- -p 3000 || sleep infinity"
+    networks: [sandbox]
+    expose: ["3000"]
+    depends_on: [backend]
+    restart: "no"
+
+  # Optional components (ml / django) are added by the developer per the architect's data model;
+  # the container name is strictly hab_${TWEETID}_s${SPRINT}_<component> (infra/naming.container_name).

@@ -1,0 +1,17 @@
+# Skills for the evaluator profile
+# own (skills/evaluator/):
+ev-collect-picture
+ev-score-dod
+ev-verdict
+ev-final-report
+ev-cleanup
+ev-push-reports
+# shared (skills/_shared/):
+kanban-read
+kanban-write
+naming
+minio-artifacts
+# interaction (skills/_interaction/):
+collect-picture
+handoff
+escalate

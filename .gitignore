@@ -216,3 +216,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+.claude/
+хакатон.md
+.claudeignore
+
+# Runtime self-improvement memory (persists via reports/ -> MinIO, not via git)
+/memory/
+# Archived skill versions are created at runtime by skill-evolve `bump`
+skills/**/versions/
+
+
